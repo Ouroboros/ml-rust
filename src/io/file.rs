@@ -1,6 +1,6 @@
 use std::fs;
 use std::io;
-use std::io::Read as IoRead;
+use std::io::Read as _;
 use std::path::Path;
 use super::read::Read;
 
