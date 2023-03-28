@@ -31,12 +31,15 @@ impl File {
         self.byte_order = order;
     }
 
-    pub fn pos(&mut self) -> u64 {
-        self.inner.seek(SeekFrom::Current(0)).unwrap()
+    pub fn pos(&mut self) -> Result<u64> {
+        self.inner.seek(SeekFrom::Current(0))
     }
 
-    pub fn size(&self) -> u64 {
-        self.inner.metadata().unwrap().len()
+    pub fn size(&self) -> Result<u64> {
+        match self.inner.metadata() {
+            Ok(m) => Ok(m.len()),
+            Err(e) => Err(e)
+        }
     }
 }
 
