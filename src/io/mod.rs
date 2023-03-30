@@ -2,6 +2,8 @@
 
 pub mod file;
 pub mod read;
+pub mod byteorder;
 
-pub use file::{File, ByteOrder, Result};
-pub use read::{Read};
+pub use file::{File, Result};
+pub use read::{ReadExt};
+pub use byteorder::{ByteOrder, LittleEndian, BigEndian};
