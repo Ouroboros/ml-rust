@@ -1,8 +1,21 @@
-use std::io;
-use super::file::Result;
-use super::byteorder::ByteOrder;
 
-pub trait ReadExt: io::Read {
+use std::io::Read;
+use super::file::Result;
+use super::byteorder::{ByteOrder, LittleEndian};
+
+#[allow(unused_imports)]
+use super::byteorder::BigEndian;
+
+/// Extends [`Read`] with methods for reading numbers. (For `std::io`.)
+///
+/// Most of the methods defined here have an unconstrained type parameter that
+/// must be explicitly instantiated. Typically, it is instantiated with either
+/// the [`BigEndian`] or [`LittleEndian`] types defined in this crate.
+///
+/// # Errors
+///
+/// read_\<number\> methods return the same errors as [`Read::read`].
+pub trait ReadExt: Read {
     fn read_array<const N: usize>(&mut self) -> Result<[u8; N]> {
         let mut buf = [0u8; N];
         self.read(&mut buf)?;
@@ -15,12 +28,12 @@ pub trait ReadExt: io::Read {
         Ok(buf)
     }
 
-    fn read_i8<T: ByteOrder>(&mut self) -> Result<i8> {
-        T::read_i8(self)
+    fn read_i8(&mut self) -> Result<i8> {
+        LittleEndian::read_i8(self)
     }
 
-    fn read_u8<T: ByteOrder>(&mut self) -> Result<u8> {
-        T::read_u8(self)
+    fn read_u8(&mut self) -> Result<u8> {
+        LittleEndian::read_u8(self)
     }
 
     fn read_i16<T: ByteOrder>(&mut self) -> Result<i16> {
@@ -55,12 +68,12 @@ pub trait ReadExt: io::Read {
         T::read_f64(self)
     }
 
-    fn i8<T: ByteOrder>(&mut self) -> i8 {
-        self.read_i8::<T>().unwrap()
+    fn i8(&mut self) -> i8 {
+        self.read_i8().unwrap()
     }
 
-    fn u8<T: ByteOrder>(&mut self) -> u8 {
-        self.read_u8::<T>().unwrap()
+    fn u8(&mut self) -> u8 {
+        self.read_u8().unwrap()
     }
 
     fn i16<T: ByteOrder>(&mut self) -> i16 {
@@ -96,4 +109,4 @@ pub trait ReadExt: io::Read {
     }
 }
 
-impl<R: io::Read + ?Sized> ReadExt for R {}
+impl<R: Read + ?Sized> ReadExt for R {}

@@ -96,6 +96,9 @@ fn read_number<const E: u32, R: io::Read, T: Number<Output = T>>(mut r: R) -> Re
     }
 }
 
+/// `ByteOrder` describes types that can serialize integers as bytes.
+///
+/// This crate provides two types that implement `ByteOrder`: [`BigEndian`] and [`LittleEndian`].
 pub trait ByteOrder {
     fn read_u8<T: io::Read>(r: T) -> Result<u8>;
     fn read_u16<T: io::Read>(r: T) -> Result<u16>;
