@@ -27,7 +27,7 @@ impl File {
     }
 
     pub fn pos(&mut self) -> Result<u64> {
-        self.inner.seek(io::SeekFrom::Current(0))
+        self.stream_position()
     }
 
     pub fn size(&self) -> Result<u64> {
@@ -46,5 +46,19 @@ impl io::Read for File {
 
     fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
         self.inner.read_exact(buf)
+    }
+}
+
+impl io::Seek for File {
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+        self.inner.seek(pos)
+    }
+
+    fn rewind(&mut self) -> io::Result<()> {
+        self.inner.rewind()
+    }
+
+    fn stream_position(&mut self) -> io::Result<u64> {
+        self.inner.stream_position()
     }
 }

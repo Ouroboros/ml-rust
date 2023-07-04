@@ -84,7 +84,7 @@ impl Number for f64 {
 const LITTLE_ENDIAN: u32 = 1;
 const BIG_ENDIAN: u32 = 2;
 
-fn read_number<const E: u32, R: io::Read, T: Number<Output = T>>(mut r: R) -> Result<T> {
+fn read_number<const E: u32, R: io::Read, T: Number<Output = T> + std::fmt::Debug>(mut r: R) -> Result<T> {
     let mut buf = [0u8; MAX_NUMBER_BYTES];
 
     r.read(&mut buf[..T::SIZE])?;
