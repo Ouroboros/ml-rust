@@ -1,5 +1,5 @@
 use std::io;
-use super::file::{Result};
+use super::file::Result;
 
 const MAX_NUMBER_BYTES: usize = 16;
 trait Number {
