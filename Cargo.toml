@@ -8,4 +8,6 @@ io = []
 ssh2 = []
 
 [dependencies]
+
+[target.'cfg(feature = "ssh2")'.dependencies]
 ssh2 = "0.9.4"
