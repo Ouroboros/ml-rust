@@ -5,9 +5,7 @@ edition = "2021"
 
 [features]
 io = []
-ssh2 = []
+ssh2 = ["dep:ssh2"]
 
 [dependencies]
-
-[target.'cfg(feature = "ssh2")'.dependencies]
-ssh2 = "0.9.4"
+ssh2 ={ version = "0.9.4", optional = true }
