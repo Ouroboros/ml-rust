@@ -6,6 +6,18 @@ edition = "2021"
 [features]
 io = []
 ssh2 = ["dep:ssh2"]
+hooker = ["dep:thiserror", "dep:lazy_static", "dep:bitflags", "dep:windows-sys"]
 
 [dependencies]
-ssh2 ={ version = "0.9.4", optional = true }
+bitflags = { version = "2.5.0", optional = true }
+lazy_static = { version = "1.4.0", optional = true }
+ssh2 = { version = "0.9.4", optional = true }
+thiserror = { version = "1.0.61", optional = true }
+
+[dependencies.windows-sys]
+version = "0.52"
+optional = true
+features = [
+    "Win32_Foundation",
+    "Win32_System_Memory",
+]
