@@ -147,7 +147,7 @@ impl fmt::Display for FunctionInfo {
     }
 }
 
-pub fn memory(base_address: usize, rva: usize, value: Value, size: usize) -> PatchInfo {
+pub(crate) fn memory(base_address: usize, rva: usize, value: Value, size: usize) -> PatchInfo {
     PatchInfo::Memory(MemoryInfo{
         base_address,
         rva,
@@ -157,26 +157,26 @@ pub fn memory(base_address: usize, rva: usize, value: Value, size: usize) -> Pat
     })
 }
 
-pub fn memory_value(base_address: usize, rva: usize, value: u64, size: usize) -> PatchInfo {
+pub(crate) fn memory_value(base_address: usize, rva: usize, value: u64, size: usize) -> PatchInfo {
     memory(base_address, rva, Value::Value(value), size)
 }
 
-pub fn memory_bytes(base_address: usize, rva: usize, bytes: &[u8]) -> PatchInfo {
+pub(crate) fn memory_bytes(base_address: usize, rva: usize, bytes: &[u8]) -> PatchInfo {
     memory(base_address, rva, Value::Bytes(bytes.into()), bytes.len())
 }
 
-fn function<T>(base_address: usize, rva: usize, target: usize, hook_type: HookType, trampoline: &mut Option<T>, flags: Option<HookFlags>) -> PatchInfo {
+pub(crate) fn function<T>(base_address: usize, rva: usize, target: usize, hook_type: HookType, trampoline: Option<&mut Option<T>>, flags: Option<HookFlags>) -> PatchInfo {
     PatchInfo::Function(FunctionInfo{
         base_address,
         rva,
         target,
-        trampoline: trampoline_addr(trampoline),
+        trampoline: if let Some(trampoline) = trampoline { trampoline_addr(trampoline) } else { None },
         hook_type,
         flags: flags.map_or(HookFlags::empty(), |v| v),
     })
 }
 
-pub(crate) fn function_jmp<T>(base_address: usize, rva: usize, target: usize, trampoline: &mut Option<T>, flags: Option<HookFlags>) -> PatchInfo {
+pub(crate) fn function_jmp<T>(base_address: usize, rva: usize, target: usize, trampoline: Option<&mut Option<T>>, flags: Option<HookFlags>) -> PatchInfo {
     function(
         base_address,
         rva,
@@ -187,7 +187,7 @@ pub(crate) fn function_jmp<T>(base_address: usize, rva: usize, target: usize, tr
     )
 }
 
-pub(crate) fn function_call<T>(base_address: usize, rva: usize, target: usize, trampoline: &mut Option<T>, flags: Option<HookFlags>) -> PatchInfo {
+pub(crate) fn function_call<T>(base_address: usize, rva: usize, target: usize, trampoline: Option<&mut Option<T>>, flags: Option<HookFlags>) -> PatchInfo {
     function(
         base_address,
         rva,
@@ -198,7 +198,7 @@ pub(crate) fn function_call<T>(base_address: usize, rva: usize, target: usize, t
     )
 }
 
-pub(crate) fn function_push<T>(base_address: usize, rva: usize, target: usize, trampoline: &mut Option<T>, flags: Option<HookFlags>) -> PatchInfo {
+pub(crate) fn function_push<T>(base_address: usize, rva: usize, target: usize, trampoline: Option<&mut Option<T>>, flags: Option<HookFlags>) -> PatchInfo {
     function(
         base_address,
         rva,

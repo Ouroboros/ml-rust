@@ -20,6 +20,9 @@ use crate::hooker::{
 
 use super::{
     function_jmp,
+    function_call,
+    memory_value,
+    memory_bytes,
     patch_info::{
         FunctionInfo,
         MemoryInfo,
@@ -50,7 +53,7 @@ pub struct Manager {
 }
 
 impl Manager {
-    pub fn get() -> MutexGuard<'static, Self> {
+    fn get() -> MutexGuard<'static, Self> {
         MANAGER.lock().unwrap()
     }
 
@@ -60,7 +63,7 @@ impl Manager {
         }
     }
 
-    pub fn patch(&self, infos: &[PatchInfo]) -> Result<()> {
+    fn patch(&self, infos: &[PatchInfo]) -> Result<()> {
         for info in infos.iter() {
             match info {
                 PatchInfo::Memory(mem) => {
@@ -126,9 +129,7 @@ impl Manager {
                 }
             },
 
-            None => {
-                return Ok(());
-            }
+            None => {},
         }
 
         let _protector = MemoryProtector::new(hook_address, hook_size)?;
@@ -140,7 +141,7 @@ impl Manager {
         Ok(())
     }
 
-    pub fn get_hook_address_and_size(&self, va: usize, hook_type: HookType) -> Result<(usize, usize)> {
+    fn get_hook_address_and_size(&self, va: usize, hook_type: HookType) -> Result<(usize, usize)> {
         let mut total_op_size: usize = 0;
         let hook_opcode_size = hook_type.size_of_opcode();
 
@@ -287,7 +288,7 @@ impl Manager {
         tramp.trampoline_size = self.generate_trampoline_code(&mut buf, target_ip, hook_address, hook_size)?;
 
         match info.hook_type {
-            HookType::Call if tramp.trampoline_size == hook_size && info.flags.contains(HookFlags::KeepRawTrampoline) => {
+            HookType::Call if tramp.trampoline_size == hook_size && info.flags.contains(HookFlags::KeepRawTrampoline) == false => {
                 // call -> jmp
                 tramp.trampoline[0] = 0xE9;
             },
@@ -297,7 +298,13 @@ impl Manager {
             },
         }
 
-        unsafe { FlushInstructionCache(0xFFFFFFFF_usize as HANDLE, tramp.trampoline.as_ptr() as *const c_void, std::mem::size_of_val(&tramp.trampoline)) };
+        unsafe {
+            FlushInstructionCache(
+                0xFFFFFFFF_usize as HANDLE,
+                tramp.trampoline.as_ptr() as *const c_void,
+                std::mem::size_of_val(&tramp.trampoline),
+            );
+        }
 
         Ok(tramp_ptr)
     }
@@ -335,7 +342,7 @@ impl Manager {
         }
 
         impl OpCode {
-            pub fn size(&self) -> usize {
+            pub(self) fn size(&self) -> usize {
                 match self {
                     OpCode::Byte(_) => 1,
                     OpCode::UShort(_) => 2,
@@ -447,10 +454,18 @@ impl Manager {
     }
 }
 
-fn patch(infos: &[PatchInfo]) -> Result<()> {
-    Manager::get().patch(infos)
+pub fn inline_hook_jmp<T>(base_address: usize, rva: usize, target: usize, trampoline: Option<&mut Option<T>>, flags: Option<HookFlags>) -> Result<()> {
+    Manager::get().patch(&[function_jmp(base_address, rva, target, trampoline, flags)])
 }
 
-pub fn inline_hook_jmp<T>(base_address: usize, rva: usize, target: usize, trampoline: &mut Option<T>, flags: Option<HookFlags>) -> Result<()> {
-    Manager::get().patch(&[function_jmp(base_address, rva, target, trampoline, flags)])
+pub fn inline_hook_call<T>(base_address: usize, rva: usize, target: usize, trampoline: Option<&mut Option<T>>, flags: Option<HookFlags>) -> Result<()> {
+    Manager::get().patch(&[function_call(base_address, rva, target, trampoline, flags)])
+}
+
+pub fn patch_memory_value(base_address: usize, rva: usize, value: u64, size: usize) -> Result<()> {
+    Manager::get().patch(&[memory_value(base_address, rva, value, size)])
+}
+
+pub fn patch_memory_bytes(base_address: usize, rva: usize, bytes: &[u8]) -> Result<()> {
+    Manager::get().patch(&[memory_bytes(base_address, rva, bytes)])
 }
