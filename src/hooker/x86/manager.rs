@@ -80,8 +80,6 @@ impl Manager {
     }
 
     fn patch_memory(&self, info: &MemoryInfo) -> Result<()> {
-        println!("{info:?}");
-
         let va = (info.base_address + info.rva) as *const c_void;
 
         let _protector = MemoryProtector::new(va as usize, info.size)?;
@@ -107,8 +105,6 @@ impl Manager {
     }
 
     fn patch_function(&self, info: &FunctionInfo) -> Result<()> {
-        println!("{info:?}");
-
         let va = info.base_address + info.rva;
         // let hook_opcode_size = info.hook_type.size_of_opcode();
 
@@ -290,7 +286,9 @@ impl Manager {
         match info.hook_type {
             HookType::Call if tramp.trampoline_size == hook_size && info.flags.contains(HookFlags::KeepRawTrampoline) == false => {
                 // call -> jmp
-                tramp.trampoline[0] = 0xE9;
+                if tramp.trampoline[0] == 0xE8 {
+                    tramp.trampoline[0] = 0xE9;
+                }
             },
 
             _ => {
@@ -369,8 +367,6 @@ impl Manager {
 
             Some(orig_target.wrapping_sub(target_ip + opcode.size() + LONG_OFFSET_SIZE))
         };
-
-        println!("op: {op:02X}");
 
         match op {
             0x70..=0x7F => {
